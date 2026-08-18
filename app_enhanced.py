@@ -119,6 +119,8 @@ def get_groq_client():
     return Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 client = get_groq_client()
+DOCUMENT_MANAGER_URL = os.getenv("DOCUMENT_MANAGER_URL", "http://localhost:8502")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 # ---------------------------------------------------
 # DATABASE INIT
@@ -265,13 +267,13 @@ EXPLANATION:"""
     prompt = prompts.get(mode, prompts["qa"])
 
     try:
-        message = client.messages.create(
-            model="mixtral-8x7b-32768",
+        completion = client.chat.completions.create(
+            model=GROQ_MODEL,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=1024,
             temperature=0.7
         )
-        return message.content[0].text
+        return completion.choices[0].message.content or ""
     except Exception as e:
         return f"Error generating response: {str(e)}"
 
@@ -358,6 +360,7 @@ with st.sidebar:
     st.divider()
 
     # Utilities
+    st.markdown(f"[Upload / manage documents]({DOCUMENT_MANAGER_URL})")
     st.markdown("#### 🛠️ Utilities")
 
     if st.button("🗑️ Clear Conversation"):
@@ -534,6 +537,7 @@ with tab2:
 
 # TAB 3: DOCUMENTS
 with tab3:
+    st.markdown(f"[Upload / manage documents]({DOCUMENT_MANAGER_URL})")
     st.markdown("### 📚 Document Information")
 
     table = get_table()
